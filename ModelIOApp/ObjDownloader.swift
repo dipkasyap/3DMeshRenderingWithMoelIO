@@ -10,58 +10,112 @@ import UIKit
 import ModelIO
 import SceneKit
 import SceneKit.ModelIO
+import Alamofire
+
+
+let thirdPartyURl = "https://cloud.box.com/shared/static/ock9d81kakj91dz1x4ea.obj"
+let ourURL = "https://testrestapi.mport.com/api/avatar/AvatarObjWithCookie/4046329"
+let cookieString = "memberid=BfDs2G%2fst8s%3d&expiry=QExKy6XInMUgGItrSfrQfg%3d%3d"
 
 class ObjDownloader {
     
-    class func download() {
-        let fileManager = FileManager.default
-        let localModelName = "model.obj"
-        let serverModelURL = URL(string: "https://testrestapi.mport.com/api/avatar/AvatarObjWithCookie/4046329")!
+    class func getCookie()-> HTTPCookie? {
         
-//        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first{
-//            let file = "file1.txt"
-//            let fileURL = dir.appendingPathComponent(file)
-//                
-//            }
-//        
+        let ExpTime = TimeInterval(60 * 60 * 24 * 365)
         
-        let localModelURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(localModelName)
-
-        
-        let session = URLSession(configuration: .default)
-        
-        /*
-         <NSHTTPCookie
-         version:0
-         name:mportpassport
-         value:memberid=rR5Ft%2fbRzy0%3d&expiry=QExKy6XInMU%2fy3rV0ZK8Ww%3d%3d
-         expiresDate:'2019-04-02 03:49:53 +0000'
-         created:'2019-04-02 02:49:57 +0000'
-         sessionOnly:FALSE
-         domain:testrestapi.mport.com
-         partition:none
-         sameSite:none
-         path:/
-         isSecure:FALSE
-         path:"/" isSecure:FALSE>
-         */
-        
-        let cookieProperties:[HTTPCookiePropertyKey: Any] = [
-            HTTPCookiePropertyKey.name : "mportpassport",
-            HTTPCookiePropertyKey.value :      "mportpassport=memberid=BfDs2G%2fst8s%3d&expiry=QExKy6XInMVUdggjdwXIgg%3d%3d; path=/; domain=.testrestapi.mport.com; Expires=Tue, 02 Apr 2019 03:56:07 GMT",
+        let cookieProps: [HTTPCookiePropertyKey : Any] = [
             
-            HTTPCookiePropertyKey.expires: "'2019-04-02 03:49:53 +0000'",
-            HTTPCookiePropertyKey.expires:  "testrestapi.mport.com"
+            HTTPCookiePropertyKey.domain: "testrestapi.mport.com",
+            HTTPCookiePropertyKey.path: "/",
+            HTTPCookiePropertyKey.name: "mportpassport",
+            HTTPCookiePropertyKey.value: cookieString,
+            // HTTPCookiePropertyKey.secure: "TRUE",
+            HTTPCookiePropertyKey.expires: NSDate(timeIntervalSinceNow: ExpTime),
+            //  HTTPCookiePropertyKey.version: "0"
         ]
         
+        return HTTPCookie(properties: cookieProps)
+    }
+    
+    //With Alamofire
+    class func download(forNode node: SCNNode) {
+        
+    let serverModelURL =  ourURL //thirdPartyURl
+        
+        func startDownload(audioUrl:String) -> Void {
+            let fileUrl = getSaveFileUrl(fileName: "onFirebase" + ".obj")
+            let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+                return (fileUrl, [.removePreviousFile, .createIntermediateDirectories])
+            }
+            
+            if let cookie = getCookie() {
+                Alamofire.SessionManager.default.session.configuration.httpCookieStorage?.setCookie(cookie)
+            }
+            
+            Alamofire.download(audioUrl, to:destination)
+                .downloadProgress { (progress) in
+                   let progress = (String)(progress.fractionCompleted)
+                    
+                    print(progress)
+                    
+                }
+                .responseData { (data) in
+                   print("data\n",data)
+                    
+                    if data.response?.statusCode == 401 {
+                        print("Cookie has expired.....")
+                        return
+                    }
+                    
+                    if let _ = data.value {
+                        let asset = MDLAsset(url: fileUrl)
+                        
+                        print(fileUrl)
+                        
+                        guard let object = asset.object(at: 0) as? MDLMesh else {
+                            print("\n\nEmpty File")
+                            return
+                        }
+                    }
+                    print(data.response?.statusCode ?? "code not found ")
 
+            }
+        }
         
-        let cookie = HTTPCookie(properties: cookieProperties)
-        session.configuration.httpCookieStorage?.setCookie(cookie!)
+        func getSaveFileUrl(fileName: String) -> URL {
+            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let nameUrl = URL(string: fileName)
+            let fileURL = documentsURL.appendingPathComponent((nameUrl?.lastPathComponent)!)
+            NSLog(fileURL.absoluteString)
+            return fileURL;
+        }
         
+        
+        startDownload(audioUrl: serverModelURL)
+        
+    }
+    
+    class func downloadWithSession(forNode node: SCNNode) {
+        let fileManager = FileManager.default
+        let localModelName = "onSeeeion.obj"
+        let serverModelURL = URL(string: ourURL)!
+        
+        let localModelURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(localModelName)
+        let session = URLSession(configuration: .default)
+        
+        if let cookie = getCookie() {
+            //session.configuration.httpCookieStorage?.setCookie(cookie)
+        }
+   
         let task = session.downloadTask(with: serverModelURL) { tempLocation, response, error in
             guard let tempLocation = tempLocation else {
-                // handle error
+                // tempLocation
+                print("Url is not valid .....")
+                return
+            }
+            
+            guard  error == nil else {
+                print(error?.localizedDescription ?? "Server throwing error")
                 return
             }
             
@@ -79,11 +133,13 @@ class ObjDownloader {
                 
             } catch {
                 // handle error
+                print("Cannot get file form server" )
             }
             
             let asset = MDLAsset(url: localModelURL)
             guard let object = asset.object(at: 0) as? MDLMesh else {
-                fatalError("Failed to get mesh from asset.")
+                print("\n\nEmpty File")
+                return
             }
         }
         

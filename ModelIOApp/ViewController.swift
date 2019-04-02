@@ -33,11 +33,15 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadObjScene()
+        
+        loadObjFromServer()
     }
    
     
     func loadObjFromServer() {
-        ObjDownloader.download()
+        ObjDownloader.download(forNode: SCNNode())
+        
+       // ObjDownloader.downloadWithSession(forNode: SCNNode())
     }
     
     func loadObjScene() {
@@ -104,6 +108,7 @@ class ViewController: UIViewController {
         
         //Wrap the ModelIO object in a SceneKit object
         let node = SCNNode(mdlObject: object)
+        
         
         //accessing directly Material of node
         //node.geometry?.firstMaterial?.normal.contents = UIColor.gray
