@@ -1,7 +1,4 @@
-//
-//  ObjDownloader.swift
-//  ModelIOApp
-//
+
 //  Created by Devi Prasad Ghimire on 2/4/19.
 //  Copyright © 2019 iOS Developer Zone. All rights reserved.
 //

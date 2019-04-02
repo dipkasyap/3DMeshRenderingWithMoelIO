@@ -1,11 +1,6 @@
-//
-//  ViewController.swift
-//  ModelIOApp
-//
-//  Created by idz on 5/9/16.
-//  Copyright © 2016 iOS Developer Zone.
-//  License: MIT
-//  See: https://raw.githubusercontent.com/iosdevzone/GettingStartedWithModelIO/master/LICENSE
+
+//  Created by Devi Prasad Ghimire on 2/4/19.
+//  Copyright © 2019 iOS Developer Zone. All rights reserved.
 //
 
 import UIKit
@@ -41,7 +36,7 @@ class ViewController: UIViewController {
     func loadObjFromServer() {
         ObjDownloader.download(forNode: SCNNode())
         
-       // ObjDownloader.downloadWithSession(forNode: SCNNode())
+        //ObjDownloader.downloadWithSession(forNode: SCNNode())
     }
     
     func loadObjScene() {
