@@ -32,76 +32,85 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        loadObjScene()
+    }
+   
+    
+    func loadObjFromServer() {
+        ObjDownloader.download()
+    }
+    
+    func loadObjScene() {
         // Load the .OBJ file
         
-        let fighter = "Fighter"
-        let body = "BodyMesh"
+        //let fighter = "Fighter"
+        //let body = "BodyMesh"
         let avatar = "Avatar"
         
+        //loading form localie file system
         guard let url = Bundle.main.url(forResource: avatar, withExtension: "obj") else {
             fatalError("Failed to find model file.")
         }
         
+        //converting to ModelIo Asset
         let asset = MDLAsset(url:url)
         guard let object = asset.object(at: 0) as? MDLMesh else {
             fatalError("Failed to get mesh from asset.")
         }
         
-        // object.generateAmbientOcclusionVertexColors(withQuality: 0.9, attenuationFactor: 0.1, objectsToConsider: [object], vertexAttributeNamed: "")
-        
+        /*
+        //Assigning material propperties to mesh
         // Create a material from the various textures
-        let scatteringFunction = MDLScatteringFunction()
-    
-        let material = MDLMaterial(name: "baseMaterial", scatteringFunction: scatteringFunction)
-        let diffColor =   #colorLiteral(red: 0.8894657493, green: 0.7006013989, blue: 0.130964309, alpha: 1).cgColor
-        let diffuse = MDLMaterialProperty(name: "diffuse", semantic: .baseColor, color: diffColor)
-        material.setProperty(diffuse)
-        
-        let metalic = MDLMaterialProperty(name: "Lighting", semantic: .metallic)
-        metalic.floatValue = 1
-        material.setProperty(metalic)
-        
-        //material.setProperty(diffuse)
-        
-        //let emmission = MDLMaterialProperty(name: "emmi", semantic: .emission, color: UIColor.gray.cgColor)
-        //   material.setProperty(emmission)
-        
+         //option 1
+         
+         let scatteringFunction = MDLScatteringFunction()
+         let material = MDLMaterial(name: "baseMaterial", scatteringFunction: scatteringFunction)
+         
+         let diffColor =   #colorLiteral(red: 0.8894657493, green: 0.7006013989, blue: 0.130964309, alpha: 1).cgColor
+         let diffuse = MDLMaterialProperty(name: "diffuse", semantic: .baseColor, color: diffColor)
+         material.setProperty(diffuse)
+         
+         let metalic = MDLMaterialProperty(name: "Lighting", semantic: .metallic)
+         metalic.floatValue = 1
+         material.setProperty(metalic)
+         
+         //material.setProperty(diffuse)
+         
+         //let emmission = MDLMaterialProperty(name: "emmi", semantic: .emission, color: UIColor.gray.cgColor)
+         //   material.setProperty(emmission)
+         
         //let property = MDLMaterialProperty(name: "spec", semantic: .specular, color: UIColor.gray.cgColor)
         
-        //material.setProperty(property)
+         /* option 2
+         //can property be seted with image imageblock for better performance
+         //this is actual way of passing graphic on game rendering
         
-        //        material.setTextureProperties([
-        //            .baseColor:"Fighter_Diffuse_25.jpg",
-        //            .specular:"Fighter_Specular_25.jpg",
-        //            .emission:"Fighter_Illumination_25.jpg"])
-        //
+        material.setProperty(property)
+                material.setTextureProperties([
+                    .baseColor:"Fighter_Diffuse_25.jpg",
+                    .specular:"Fighter_Specular_25.jpg",
+                    .emission:"Fighter_Illumination_25.jpg"])
+        */
         
+        //Apply the texture to every submesh of the asset
+        //for option 1 or option 2
         
-        
-        // Apply the texture to every submesh of the asset
-        for  submesh in object.submeshes!  {
+         for  submesh in object.submeshes!  {
             if let submesh = submesh as? MDLSubmesh {
-                  submesh.material = material
-                
+                submesh.material = material
             }
         }
+         */
         
-        // Wrap the ModelIO object in a SceneKit object
+        //Wrap the ModelIO object in a SceneKit object
         let node = SCNNode(mdlObject: object)
         
+        //accessing directly Material of node
         //node.geometry?.firstMaterial?.normal.contents = UIColor.gray
         
-        
-        let lightNode = SCNNode()
-        lightNode.light = SCNLight()
-        lightNode.light!.type = .omni
-      
-        //create and add a light to the scene
         let scene = SCNScene()
         scene.rootNode.addChildNode(node)
         
-
         //animate the 3d object
         node.runAction(
             SCNAction.repeatForever(
@@ -111,8 +120,9 @@ class ViewController: UIViewController {
             )
         )
         
+        //accessing materil directly
         if let material = scene.rootNode.childNodes.first?.geometry?.materials.first {
-          
+            
             material.shininess = 1
             if #available(iOS 10.0, *) {
                 material.lightingModel = .physicallyBased
@@ -123,28 +133,28 @@ class ViewController: UIViewController {
             material.diffuse.contents =  #colorLiteral(red: 0.8894657493, green: 0.7006013989, blue: 0.130964309, alpha: 1).cgColor
             
             if #available(iOS 10.0, *) {
-                scene.rootNode.childNodes.first!.geometry!.materials.first!.metalness.contents = 1
-                scene.rootNode.childNodes.first!.geometry!.materials.first!.roughness.contents = 0
+                //scene.rootNode.childNodes.first!.geometry!.materials.first!.metalness.contents = 1
+                //scene.rootNode.childNodes.first!.geometry!.materials.first!.roughness.contents = 0
             } else {
                 // Fallback on earlier versions
             }
         }
-        
-  
         
         //Set up the SceneView
         sceneView.autoenablesDefaultLighting = true
         sceneView.allowsCameraControl = true
         sceneView.scene = scene
         sceneView.backgroundColor = UIColor.white
+        
+        
+        //managing light for scene
+        //FYI: light can be passed to the object directly
+        
         ambientLightLineOn(scene: sceneView.scene!)
         //omniLightOn(scene: sceneView.scene!)
     }
-
-
+    
 }
-
-
 
 func ambientLightLineOn(scene: SCNScene) {
     let ambientLightNode = SCNNode()

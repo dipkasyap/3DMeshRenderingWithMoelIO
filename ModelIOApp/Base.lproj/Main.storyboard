@@ -23,7 +23,7 @@
                         <subviews>
                             <sceneKitView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7mR-RU-iQZ">
                                 <rect key="frame" x="47" y="20" width="281" height="354"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="7mR-RU-iQZ" secondAttribute="height" multiplier="27:34" id="SdA-kt-rWZ"/>
                                 </constraints>
